@@ -39,6 +39,16 @@ class MasterProblem:
         status = self.prob.solve(solver)
         return [self.prob.constraints[i].pi for i in self.prob.constraints]
 
+    def non_to_basic_constrain(self):
+        constrain = []
+        return
+
+    def dual_problem(self, dual):
+        dual_prob = self.prob = pp.LpProblem('dual_prob', pp.LpMinimize)
+        a = [pp.LpVariable('a_' + str(k), lowBound=0, cat=pp.LpInteger) for k in range(len(dual))]
+        dual_obj = sum(self.object_vector[p] - a[p] * dual[p] for p in range(len(dual)))
+        dual_obj.extend(self.non_to_basic_constrain())
+
     def run(self):
         if not self.parameter_check():
             print('parameter not right')
@@ -51,7 +61,7 @@ class MasterProblem:
 
 
 if __name__ == '__main__':
-    row = 20
+    row = 3
     column = 10
     object_test = []
     constrain_mat = []

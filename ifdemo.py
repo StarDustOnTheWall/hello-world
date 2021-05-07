@@ -3,17 +3,21 @@
 import pulp as pp
 
 prob = pp.LpProblem('test', pp.LpMaximize)
-x = pp.LpVariable('x', lowBound=0, cat=pp.LpInteger)
-y = pp.LpVariable('y', lowBound=0, cat=pp.LpInteger)
-z = pp.LpVariable('z', lowBound=0, cat=pp.LpInteger)
-objective = 1000*x+2000*y+3000*z
-constraints = [x+2*y+3*z <= 10, y+2*z <= 5]
+x_1 = pp.LpVariable('x', lowBound=0, cat=pp.LpInteger)
+x_2 = pp.LpVariable('y', lowBound=0, cat=pp.LpInteger)
+x_3 = pp.LpVariable('z', lowBound=0, cat=pp.LpInteger)
+objective = x_1 + x_2 + x_3
+constraints = [5*x_1 >= 25, 2*x_2 >= 20, 2*x_3>=18]
 prob += objective
 for cons in constraints:
     prob += cons
-status = prob.solve()
+solver = pp.PULP_CBC_CMD()
+solver.msg = False
+status = prob.solve(solver)
 for v in prob.variables():
     print(v.name, "=", v.varValue)
+for c in prob.constraints:
+    print(prob.constraints[c].pi)
 
 
 

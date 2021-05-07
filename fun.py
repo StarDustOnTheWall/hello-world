@@ -1,7 +1,7 @@
 from math import factorial
 
 '''
-n1 dices, the possibility where you
+n1 dices, the possibility where you got pattern with k_1 one, k_2 two.. etc
 '''
 
 

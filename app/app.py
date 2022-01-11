@@ -1,12 +1,9 @@
 from sanic import Sanic
 from sanic.response import json
-
-app = Sanic(__name__)
-
-
-@app.route("/")
-async def test(request):
-    return json({"hello": "world"})
+from admin import homepage
+app = Sanic('test')
+app.blueprint(homepage)
 
 
-app.run(host="0.0.0.0", port=8000)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=15020)

@@ -14,10 +14,12 @@ for cons in constraints:
 solver = pp.PULP_CBC_CMD()
 solver.msg = False
 status = prob.solve(solver)
-for v in prob.variables():
-    print(v.name, "=", v.varValue)
-for c in prob.constraints:
-    print(prob.constraints[c].pi)
+# for v in prob.variables():
+#     print(v.name, "=", v.varValue)
+# for c in prob.constraints:
+#     print(prob.constraints[c].pi)
+print(prob.objective.value())
+
 
 
 

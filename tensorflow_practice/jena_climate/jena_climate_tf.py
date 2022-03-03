@@ -1,9 +1,14 @@
 import pandas as pd
 import numpy as np
+import os
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import layers
+from tensorflow.keras.optimizers import RMSprop, Adam
 from matplotlib import pyplot as plt
 
 from tensorflow_practice.utility.normalization import normalization_pipe
-file_name = 'jena_climate_2009_2016.csv'
+project_path = os.getcwd()
+file_name = os.path.join(project_path, 'tensorflow_practice/jena_climate/jena_climate_2009_2016.csv')
 
 
 def generator(data, lookback, delay, min_index, max_index,
@@ -11,7 +16,7 @@ def generator(data, lookback, delay, min_index, max_index,
     if max_index is None:
         max_index = len(data) - delay - 1
     i = min_index + lookback
-    while 1:
+    while True:
         if shuffle:
             rows = np.random.randint(
                             min_index + lookback, max_index, size=batch_size)
@@ -48,7 +53,47 @@ def generator(data, lookback, delay, min_index, max_index,
 data = pd.read_csv(file_name)
 column_list = data.columns.to_list()
 column_list.remove('Date Time')
+cyclic_index = [(p, 6) for p in column_list]
+cat_index = [(p, None) for p in column_list]
 pipe = normalization_pipe(numeric_index=column_list)
 float_data = data[column_list].values
-# pipe.fit_transform(float_data)
+trans_data = pipe.fit_transform(data[column_list])
+# degree is column 1
 # plt.plot(range(len(temp)), temp)
+
+lookback, step, delay, batch_size = 1440, 6, 144, 128
+train_gen = generator(trans_data, lookback=lookback, delay=delay, min_index=0, max_index=200000,
+                      shuffle=True, step=step, batch_size=batch_size)
+val_gen = generator(trans_data, lookback=lookback, delay=delay, min_index=200001, max_index=300000,
+                    shuffle=False, step=step, batch_size=batch_size)
+test_gen = generator(trans_data, lookback=lookback, delay=delay, min_index=300001, max_index=None,
+                     shuffle=False, step=step, batch_size=batch_size)
+
+val_steps = 300000-200001-lookback
+test_steps = len(trans_data)-300001-lookback
+
+# while True:
+#     test = next(train_gen)
+
+model = Sequential()
+# model.add(layers.Flatten(input_shape=(lookback // step, trans_data.shape[-1])))
+# model.add(layers.Dense(32, activation='relu'))
+# model.add(layers.Dense(1))
+
+model.add(layers.GRU(32, dropout=0.1, recurrent_dropout=0.5, return_sequences=True,
+                     input_shape=(None, trans_data.shape[-1])))
+model.add(layers.GRU(64, activation='relu', dropout=0.1, recurrent_dropout=0.5))
+model.add(layers.Dense(1))
+
+model.compile(optimizer=RMSprop(), loss='mae')
+history = model.fit(train_gen, steps_per_epoch=500, epochs=20, validation_data=val_gen,
+                    validation_steps=val_steps)
+
+# loss = history.history['loss']
+# val_loss = history.history['val_loss']
+# epochs = range(1, len(loss) + 1)
+# plt.figure()
+# plt.plot(epochs, loss, 'bo', label='Training loss')
+# plt.plot(epochs, val_loss, 'b', label='Validation loss')
+# plt.legend()
+# plt.show()
